@@ -52,12 +52,20 @@ export function createElement(type, attributes, ...children) {
   for (let p in attributes) {
     component.setAttribute(p, attributes[p]);
   }
-  for (let child of children) {
-    if (typeof child === 'string') {
-      child = new TextWrapper(child);
+
+  let insertChildren = (children) => {
+    for (let child of children) {
+      if (typeof child === 'object' && child instanceof Array) {
+        insertChildren(child);
+        continue;
+      }
+      if (typeof child === 'string') {
+        child = new TextWrapper(child);
+      }
+      component.appendChild(child);
     }
-    component.appendChild(child);
   }
+  insertChildren(children);
   return component;
 }
 
