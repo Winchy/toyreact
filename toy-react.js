@@ -7,6 +7,8 @@ class ElementWrapper {
   setAttribute(name, value) {
     if (name.match(/^on([\s\S]+)$/)) {
       this.root.addEventListener(RegExp.$1.replace(/^[\s\S]/, c => c.toLowerCase()), value);
+    } else if (name === 'className') {
+      this.root.className = value;
     } else {
       this.root.setAttribute(name, value);
     }
@@ -15,7 +17,9 @@ class ElementWrapper {
     let range = document.createRange();
     range.setStart(this.root, this.root.childNodes.length);
     range.setEnd(this.root, this.root.childNodes.length);
-    component[RENDER_TO_DOM](range);
+    if (component !== null) {
+      component[RENDER_TO_DOM](range);
+    }
   }
   [RENDER_TO_DOM](range) {
     range.deleteContents();
@@ -51,11 +55,16 @@ export class Component {
     this.render()[RENDER_TO_DOM](range);
   }
   rerender() {
-    this._range.deleteContents();
-    this[RENDER_TO_DOM](this._range);
+    let oldRange = this._range;
+    let range = document.createRange();
+    range.setStart(oldRange.startContainer, oldRange.startOffset);
+    range.setEnd(oldRange.startContainer, oldRange.startOffset);
+    this[RENDER_TO_DOM](range);
+
+    oldRange.setStart(range.endContainer, range.endOffset);
+    oldRange.deleteContents();
   }
   setState(newState) {
-    console.log(newState);
     if (this.state === null || typeof this.state != 'object') {
       this.state = newState;
       this.rerender();
@@ -64,6 +73,8 @@ export class Component {
     let merge = (oldState, newState) => {
       for (let p in newState) {
         if (oldState[p] === null || typeof oldState[p] !== 'object') {
+          oldState[p] = newState[p];
+        } else if (oldState[p] instanceof Array && newState[p] instanceof Array) {
           oldState[p] = newState[p];
         } else {
           merge(oldState[p], newState[p]);
