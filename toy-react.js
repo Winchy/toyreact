@@ -74,11 +74,12 @@ export class Component {
       for (let p in newState) {
         if (oldState[p] === null || typeof oldState[p] !== 'object') {
           oldState[p] = newState[p];
-        } else if (oldState[p] instanceof Array && newState[p] instanceof Array) {
-          oldState[p] = newState[p];
-        } else {
-          merge(oldState[p], newState[p]);
+          continue;
         }
+        if (oldState[p] instanceof Array && newState[p] instanceof Array) {
+          oldState[p].length = newState[p].length;
+        }
+        merge(oldState[p], newState[p]);
       }
     }
     merge(this.state, newState);
